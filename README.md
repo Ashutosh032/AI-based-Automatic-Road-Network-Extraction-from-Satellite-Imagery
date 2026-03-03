@@ -1,57 +1,50 @@
-# AI-based-Automatic-Road-Network-Extraction-from-Satellite-Image
+# DeepGlobe Road Extraction Project
 
-1. Repository Structure
-Plaintext
-├── data/               # Documentation on datasets (SpaceNet, DeepGlobe)
-├── models/             # Model architectures (U-Net, DeepLabV3+, D-LinkNet)
-├── notebooks/          # Exploratory Data Analysis (EDA) and Training logs
-├── src/                # Core processing scripts
-│   ├── preprocess.py   # Satellite image tiling and normalization
-│   ├── train.py        # Training loops
-│   ├── inference.py    # Running model on new satellite imagery
-│   └── postprocess.py  # Converting pixel masks to Vector (GeoJSON/SHP)
-├── weights/            # Saved model checkpoints (.pth or .h5)
-├── requirements.txt    # Python dependencies
-└── README.md           # Project overview and setup instructions
+This project implements a U-Net based model to extract road networks from satellite imagery.
 
-Description
-This project focuses on the automated extraction of road networks from high-resolution satellite imagery (0.3m - 1m resolution). Using Deep Learning, the system performs semantic segmentation to identify road pixels and classifies road surface materials (Bituminous, Concrete, Earthen).
+## Setup
 
-Key Features
+1.  **Install Dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-Semantic Segmentation: Utilizing U-Net and DeepLabV3+ architectures for pixel-level road detection.
+2.  **Download Data**:
+    You need the DeepGlobe Road Extraction Dataset.
+    - **Option A (Kaggle API)**:
+      If you have `kaggle` installed and configured:
+      ```bash
+      kaggle datasets download -d balraj98/deepglobe-road-extraction-dataset -p data/raw
+      unzip data/raw/deepglobe-road-extraction-dataset.zip -d data/raw
+      ```
+    - **Option B (Manual)**:
+      1. Go to [https://www.kaggle.com/datasets/balraj98/deepglobe-road-extraction-dataset](https://www.kaggle.com/datasets/balraj98/deepglobe-road-extraction-dataset)
+      2. Download the zip file.
+      3. Extract the contents into `data/raw/` folder in this project.
+      
+      Structure should look like:
+      ```text
+      data/raw/
+          train/
+              100034_sat.jpg
+              100034_mask.png
+              ...
+      ```
 
-Material Classification: Multi-class classification to distinguish between asphalt, concrete, and unpaved roads.
+## Training
 
-Connectivity Preservation: Implementation of specialized loss functions (like Soft-IoU or Dice Loss) to ensure thin road structures remain connected.
+To train the model:
 
-Vectorization: Automated post-processing pipeline to convert binary masks into clean GIS-compatible vector lines.
+```bash
+cd src
+python train.py --data_dir ../data/raw/train --epochs 20 --batch_size 8
+```
 
-Technology Stack
+## Inference
 
-Frameworks: PyTorch / TensorFlow
+To run inference on a single image:
 
-Computer Vision: OpenCV, Albumentations (for heavy satellite data augmentation)
-
-Geospatial Tools: GDAL, Rasterio, Geopandas (for handling .tif and .shp files)
-
-Models: U-Net, D-LinkNet (optimized for road extraction)
-
-Dataset References
-To replicate or extend this work, the following open-source datasets are recommended:
-
-SpaceNet (Road Detection): High-resolution satellite imagery with labeled road vectors.
-
-DeepGlobe Road Extraction Challenge: Large-scale dataset for binary road segmentation.
-
-RoadNet-V2: Multi-scale dataset focused on urban and rural connectivity.
-
-How it Works
-
-Preprocessing: Satellite images are tiled into 512x512 patches and normalized.
-
-Training: The model learns to ignore occlusions (tree canopies/shadows) using multi-spectral data.
-
-Inference: The model outputs a probability map of road locations.
-
-Vectorization: The probability map is skeletonized to produce a center-line road network.
+```bash
+cd src
+python inference.py --input_image ../data/raw/train/100034_sat.jpg --weights best_model.pth
+```
